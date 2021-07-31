@@ -75,10 +75,8 @@ class WISP_Module extends ServerModule
        if(isset($requirements[$param])){
             $response = $requirements[$param];
         }
-                   self::save_log($this->module_type, $this->module, "requirements2", "requirements2", $options, 'json');
         if(isset($options[$param])){
             $response = $options[$param];
-            self::save_log($this->module_type, $this->module, "requirements2", "requirements2", $response, 'json');
         }
         return $response;
     }
@@ -323,7 +321,6 @@ class WISP_Module extends ServerModule
              * Here are the codes to be sent to the API...
             */
             //CREATE USER
-            self::save_log($this->module_type, $this->module, "requirements", "requirements", $this->val_of_conf_opt, 'json');
             $userResult = $this->wisp_call('users?search=' . urlencode($this->user["email"]));
             if ($userResult['meta']['pagination']['total'] === 0)
             {
@@ -333,24 +330,24 @@ class WISP_Module extends ServerModule
             $name = !empty($this->product["module_data"]['servername']) ? $this->product["module_data"]['servername'] : 'My Server';
             $userId =  $this->wisp_call('users/external/' .  $this->user["id"])['attributes']['id'];
             $memory = !$this->getParams("Ram") ? $this->product["module_data"]['Memory'] :  $this->getParams("Ram");
-            $swap = !$this->getParams("Ram") ? $this->product["module_data"]['Swap'] :  $this->getParams("Swap");
-            $io = !$this->getParams("Ram") ? $this->product["module_data"]['DiskIO'] :  $this->getParams("DiskIO");
-            $cpu = !$this->getParams("Ram") ? $this->product["module_data"]['CPU'] :  $this->getParams("CPU");
+            $swap = !$this->getParams("Swap") ? $this->product["module_data"]['Swap'] :  $this->getParams("Swap");
+            $io = !$this->getParams("DiskIO") ? $this->product["module_data"]['DiskIO'] :  $this->getParams("DiskIO");
+            $cpu = !$this->getParams("CPU") ? $this->product["module_data"]['CPU'] :  $this->getParams("CPU");
             $disk = !$this->getParams("Disk Space") ? $this->product["module_data"]['Disk-space'] : $this->getParams("Disk Space");
-            $location_id =!$this->getParams("Ram") ? $this->product["module_data"]['Location-ID'] :  $this->getParams("Location-ID");
-            $eggId = !$this->getParams("Ram") ? $this->product["module_data"]['Egg-ID'] :  $this->getParams("Egg-ID");
-            $nestId = !$this->getParams("Ram") ? $this->product["module_data"]['Nest-ID'] :  $this->getParams("Nest-ID");
+            $location_id =!$this->getParams("Location-ID") ? $this->product["module_data"]['Location-ID'] :  $this->getParams("Location-ID");
+            $eggId = !$this->getParams("Egg-ID") ? $this->product["module_data"]['Egg-ID'] :  $this->getParams("Egg-ID");
+            $nestId = !$this->getParams("Nest-ID") ? $this->product["module_data"]['Nest-ID'] :  $this->getParams("Nest-ID");
             $eggData = $this->wisp_call('nests/' . $nestId . '/eggs/' . $eggId . '?include=variables');
             $dedicated_ip = $this->product["module_data"]['dedIP'] ? true : false;
-            $port_range = !$this->getParams("Ram") ? $this->product["module_data"]['portrange'] :  $this->getParams("portrange");
+            $port_range = !$this->getParams("portrange") ? $this->product["module_data"]['portrange'] :  $this->getParams("portrange");
             $port_range = !empty($port_range) ? explode(',', $port_range) : [];
-            $image = !$this->getParams("Ram") ? $this->product["module_data"]['image'] :  $this->getParams("image");
+            $image = !$this->getParams("image") ? $this->product["module_data"]['image'] :  $this->getParams("image");
             $image = !empty($image) ? $image : $eggData['attributes']['docker_image'];
-            $startup = !$this->getParams("Ram") ? $this->product["module_data"]['startup'] :  $this->getParams("startup");
+            $startup = !$this->getParams("startup") ? $this->product["module_data"]['startup'] :  $this->getParams("startup");
             $startup = !empty($startup) ? $startup: $eggData['attributes']['startup'];
-            $databases = !$this->getParams("Ram") ? $this->product["module_data"]['databases'] :  $this->getParams("databases");
+            $databases = !$this->getParams("databases") ? $this->product["module_data"]['databases'] :  $this->getParams("databases");
             $oom_disabled = $this->product["module_data"]['oom'] ? true : false;
-            $backup_megabytes_limit = !$this->getParams("Ram") ? $this->product["module_data"]['backup'] :  $this->getParams("backup");
+            $backup_megabytes_limit = !$this->getParams("backup") ? $this->product["module_data"]['backup'] :  $this->getParams("backup");
             foreach($eggData['attributes']['relationships']['variables']['data'] as $key => $val) {
                 $attr = $val['attributes'];
                 $var = $attr['env_variable'];

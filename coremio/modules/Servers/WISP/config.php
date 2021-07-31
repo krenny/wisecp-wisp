@@ -9,5 +9,16 @@
         'configurable-option-params'    => [
             'Disk Space',
             'Ram',
+            'Swap',
+            'DiskIO',
+            'CPU',
+            'Location-ID',
+            'Egg-ID',
+            'Nest-ID',
+            'portrange',
+            'image',
+            'startup',
+            'databases',
+            'backup',
         ],
     ];
