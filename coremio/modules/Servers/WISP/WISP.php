@@ -348,6 +348,8 @@ class WISP_Module extends ServerModule
             $databases = !$this->getParams("databases") ? $this->product["module_data"]['databases'] :  $this->getParams("databases");
             $oom_disabled = $this->product["module_data"]['oom'] ? true : false;
             $backup_megabytes_limit = !$this->getParams("backup") ? $this->product["module_data"]['backup'] :  $this->getParams("backup");
+		
+	    $environment = [];
             foreach($eggData['attributes']['relationships']['variables']['data'] as $key => $val) {
                 $attr = $val['attributes'];
                 $var = $attr['env_variable'];
