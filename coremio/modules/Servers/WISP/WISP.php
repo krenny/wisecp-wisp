@@ -383,7 +383,7 @@ class WISP_Module extends ServerModule
             ],
             'environment' => $environment,
             'start_on_completion' => true,
-            'external_id' => $this->order["id"],
+            'external_id' => (string)$this->order["id"],
         ];
         $server = $this->wisp_call('servers', $serverData, 'POST',true);
 
@@ -760,6 +760,25 @@ class WISP_Module extends ServerModule
         return ['creation_info' => $c_info, 'config' => $config, 'login' => $login, ];
     }
 
+
+    public function get_status()
+    {
+        try {
+
+            return true;
+        } catch (Exception $e) {
+            $this->error = $e->getMessage();
+            self::save_log(
+                'Servers',
+                $this->_name,
+                __FUNCTION__,
+                ['order' => $this->order],
+                $e->getMessage(),
+                $e->getTraceAsString()
+            );
+            return false;
+        }
+    }
     public function adminArea_buttons()
     {
         $buttons = [];
