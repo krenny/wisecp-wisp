@@ -1,6 +1,3 @@
-Setup guide:
-https://docs.krenny.dev/books/wisp-module/page/setup-guide
-
 Github:
 https://github.com/krenny/wisecp-wisp
 
