@@ -324,7 +324,7 @@ class WISP_Module extends ServerModule
             $userResult = $this->wisp_call('users?search=' . urlencode($this->user["email"]));
             if ($userResult['meta']['pagination']['total'] === 0)
             {
-                $userResult = $this->wisp_call('users',[ 'email' => $this->user["email"], 'first_name' => $this->user["name"], 'last_name' => $this->user["surname"], 'external_id' => $this->user["id"] ], 'POST', true);
+                $userResult = $this->wisp_call('users',[ 'email' => $this->user["email"], 'first_name' => $this->user["name"], 'last_name' => $this->user["surname"], 'external_id' => (string)$this->user["id"] ], 'POST', true);
             }
             //CREATE SERVER
             $name = !empty($this->product["module_data"]['servername']) ? $this->product["module_data"]['servername'] : 'My Server';
