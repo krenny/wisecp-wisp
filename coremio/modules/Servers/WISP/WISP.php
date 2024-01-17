@@ -504,7 +504,7 @@ class WISP_Module extends ServerModule
              * for parameters: https://docs.wisecp.com/en/kb/parameters
              * Here are the codes to be sent to the API...
             */
-            $id = $this->wisp_call("servers/external/" . $this->order["id"])[attributes][id];
+            $id = $this->wisp_call("servers/external/" . $this->order["id"])["attributes"]["id"];
             $this->wisp_call("servers/" . $id . "/force",[],'DELETE',true);
             $result = "OK"; # $this->api->terminate();
 
