@@ -31,7 +31,7 @@ class WISP_Module extends ServerModule
         curl_setopt($curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_301);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
 
-        $headers = ["Authorization: Bearer " . $this->server["password"], "Accept: Application/vnd.wisp.v1+json", ];
+        $headers = ["Authorization: Bearer " . $this->server["password"], "Accept: application/json", ];
 		$jsonData = [];
         if ($method === "POST" || $method === "PATCH")
         {
