@@ -121,11 +121,6 @@ class WISP_Module extends ServerModule
         }
         return true;
     }
-    private function getEggs($data = [])
-    {
-        array_push($egg, $this->wisp_call('nests/' . $nestID[$key] . '/eggs') ['attributes']['id']);
-        return 1;
-    }
     public function config_options($data = [])
     {
         // REWORK THIS IN NEXT UPDATE
