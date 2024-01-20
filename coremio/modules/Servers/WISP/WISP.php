@@ -31,7 +31,7 @@ class WISP_Module extends ServerModule
         curl_setopt($curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_301);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
 
-        $headers = ["Authorization: Bearer " . $this->server["password"], "Accept: Application/vnd.wisp.v1+json", ];
+        $headers = ["Authorization: Bearer " . $this->server["password"], "Accept: application/json", ];
 		$jsonData = [];
         if ($method === "POST" || $method === "PATCH")
         {
@@ -296,6 +296,12 @@ class WISP_Module extends ServerModule
                     'value'             => isset($data["servername"]) ? $data["servername"] : "",
                     'placeholder'       => "",
                 ],
+                'description'          => [
+                    'name'              => "Server description",
+                    'description'       => "Will be used as server description on panel side",
+                    'type'              => "text",
+                    'value'             => $data["description"] ?? "",
+                ],
                 'oom'          => [
                     'name'              => "Disable OOM Killer",
                     'description'       => "Should the Out Of Memory Killer be disabled?(optional)",
@@ -328,6 +334,7 @@ class WISP_Module extends ServerModule
             }
             //CREATE SERVER
             $name = !empty($this->product["module_data"]['servername']) ? $this->product["module_data"]['servername'] : 'My Server';
+            $description = !empty($this->product["module_data"]['description']) ? $this->product["module_data"]['description'] : '';
             $userId =  $this->wisp_call('users/external/' .  $this->user["id"])['attributes']['id'];
             $memory = !$this->getParams("Ram") ? $this->product["module_data"]['Memory'] :  $this->getParams("Ram");
             $swap = !$this->getParams("Swap") ? $this->product["module_data"]['Swap'] :  $this->getParams("Swap");
@@ -358,6 +365,7 @@ class WISP_Module extends ServerModule
 
             $serverData = [
             'name' => $name,
+            'description' => $description,
             'user' => (int) $userId,
             'nest' => (int) $nestId,
             'egg' => (int) $eggId,
@@ -756,10 +764,45 @@ class WISP_Module extends ServerModule
 
             $login["password"] = $this->encode_str($new_password);
         }
-
+        try {
+            $this->addonCreate($this->order["id"],$c_info);
+        } catch (Exception $e){
+            $this->error = $e->getMessage();
+            self::save_log(
+                'Servers',
+                $this->_name,
+                __FUNCTION__,
+                ['order' => $this->order],
+                $e->getMessage(),
+                $e->getTraceAsString()
+            );
+            return false;
+        }
         return ['creation_info' => $c_info, 'config' => $config, 'login' => $login, ];
     }
 
+    public function addon_create($addon=[],$params=[])
+    {
+        try
+        {
+            //TODO: requirements
+            $data = (array) $this->val_of_conf_opt;
+            $this->addonCreate($this->order["id"],$data);
+            return false;
+        }
+        catch (Exception $e){
+            $this->error = $e->getMessage();
+            self::save_log(
+                'Servers',
+                $this->_name,
+                __FUNCTION__,
+                ['order' => $this->order],
+                $e->getMessage(),
+                $e->getTraceAsString()
+            );
+            return false;
+        }
+    }
 
     public function get_status()
     {
@@ -786,5 +829,85 @@ class WISP_Module extends ServerModule
         return $buttons;
     }
 
+
+    /**
+     * @throws Exception
+     */
+    public function addonCreate($external_id, $data){
+        $name = !empty($data['servername']) ? $data['servername'] : 'My Server';
+        $description = !empty($data['description']) ? $data['description'] : '';
+        $userId =  $this->wisp_call('users/external/' .  $this->user["id"])['attributes']['id'];
+        $memory = !$this->getParams("Ram") ? $data['Memory'] :  $this->getParams("Ram");
+        $swap = !$this->getParams("Swap") ? $data['Swap'] :  $this->getParams("Swap");
+        $io = !$this->getParams("DiskIO") ? $data['DiskIO'] :  $this->getParams("DiskIO");
+        $cpu = !$this->getParams("CPU") ? $data['CPU'] :  $this->getParams("CPU");
+        $disk = !$this->getParams("Disk Space") ? $data['Disk-space'] : $this->getParams("Disk Space");
+        $eggId = !$this->getParams("Egg-ID") ? $data['Egg-ID'] :  $this->getParams("Egg-ID");
+        $nestId = !$this->getParams("Nest-ID") ? $data['Nest-ID'] :  $this->getParams("Nest-ID");
+        $eggData = $this->wisp_call('nests/' . $nestId . '/eggs/' . $eggId . '?include=variables');
+        $image = !$this->getParams("image") ? $data['image'] :  $this->getParams("image");
+        $image = !empty($image) ? $image : $eggData['attributes']['docker_image'];
+        $startup = !$this->getParams("startup") ? $data['startup'] :  $this->getParams("startup");
+        $startup = !empty($startup) ? $startup: $eggData['attributes']['startup'];
+        $databases = !$this->getParams("databases") ? $data['databases'] :  $this->getParams("databases");
+        $oom_disabled = (bool)$data['oom'];
+        $backup_megabytes_limit = !$this->getParams("backup") ? $data['backup'] :  $this->getParams("backup");
+
+        //Get current server
+        $api = $this->wisp_call("servers/external/" . $external_id,[],"GET",true);
+        if($api['status_code'] != 200 || !isset($api['attributes']['id'])) throw new Exception('Failed to change package of server because it doesn\'t exist.');
+        $server_id = $api["attributes"]["id"];
+
+        // UPDATE Server details
+        $details = ["user" => $userId,
+            "description" => $description,
+            "external_id" => (string)$external_id,
+            "name" => $name
+        ];
+
+        $response = $this->wisp_call("servers/" . $server_id . "/details",$details,"PATCH",true);
+        //DISABLE check until wisp endpoint works again
+        //TODO
+        //if($response["status_code"] != 200) throw new Exception("Error while updating server details. Received status code: " . $response["status_code"]);
+
+        // UPDATE  Server build
+
+        $updateData = [
+            'allocation' => $api['attributes']['allocation'],
+            'memory' => (int) $memory,
+            'swap' => (int) $swap,
+            'io' => (int) $io,
+            'cpu' => (int) $cpu,
+            'disk' => (int) $disk,
+            'oom_disabled' => $oom_disabled,
+            'feature_limits' => [
+                'databases' => (int) $databases,
+                'allocations' => (int) 1,
+                'backup_megabytes_limit' => (int) $backup_megabytes_limit,
+            ],
+        ];
+
+        $response = $this->wisp_call("servers/" . $server_id . "/build",$updateData,"PATCH",true);
+        if($response["status_code"] != 200) throw new Exception("Error while updating server build. Received status code: " . $response["status_code"]);
+
+        //Update Server startup
+
+        $environment = [];
+        foreach($eggData['attributes']['relationships']['variables']['data'] as $key => $val) {
+            $attr = $val['attributes'];
+            $var = $attr['env_variable'];
+            $environment[$var] = !$this->getParams($var) ?  $attr['default_value'] :  $this->getParams($var);
+        }
+
+        $startup = [
+            'startup' => $startup,
+            'environment' => $environment,
+            'egg' => $eggId,
+            'image' => $image,
+            'skip_scripts' => false
+        ];
+        $response = $this->wisp_call("servers/" . $server_id . "/startup",$startup,"PATCH",true);
+        if($response["status_code"] != 200) throw new Exception("Error while updating server startup. Received status code: " . $response["status_code"]);
+    }
 }
 

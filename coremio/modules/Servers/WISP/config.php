@@ -20,5 +20,6 @@
             'startup',
             'databases',
             'backup',
+            'description'
         ],
     ];
